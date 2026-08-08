@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const express = require('express');
 const app = express()
@@ -29,7 +29,21 @@ async function run() {
             const cursor = dataCollections.find().limit(6);
             const result = await cursor.toArray();
             res.send(result);
-        })
+        });
+        app.get('/allsports', async (req, res) => {
+            const cursor = dataCollections.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+        app.get('/allsports/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            };
+            const result = await dataCollections.findOne(query);
+            res.send(result);
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
