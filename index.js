@@ -43,6 +43,16 @@ async function run() {
         //     const result = await bookingCollections.insertOne(bookingData).toArray();
         //     res.json(result);
         // })
+        app.post('/sports', async (req, res) => {
+            const facilityData = req.body;
+            const result = await dataCollections.insertOne(facilityData)
+            console.log(result);
+            res.status(201).json({
+                success: true,
+                message: "Booking created successfully",
+                data: result,
+            });
+        })
         app.post("/bookings", async (req, res) => {
             try {
                 const bookingData = req.body;
@@ -84,7 +94,97 @@ async function run() {
             const { bookingId } = req.params;
             const result = await bookingCollections.deleteOne({ _id: new ObjectId(bookingId) });
             res.json(result);
-        })
+        });
+
+
+        app.delete("/sports/:id", async (req, res) => {
+            try {
+                const { id } = req.params;
+
+                const result = await dataCollections.deleteOne({
+                    _id: new ObjectId(id),
+                });
+
+                if (result.deletedCount === 0) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "Facility not found",
+                    });
+                }
+
+                res.status(200).json({
+                    success: true,
+                    message: "Facility deleted successfully",
+                });
+
+            } catch (error) {
+                console.error("Delete facility error:", error);
+
+                res.status(500).json({
+                    success: false,
+                    message: "Failed to delete facility",
+                });
+            }
+        });
+
+        app.patch("/sports/:id", async (req, res) => {
+            try {
+                const { id } = req.params;
+
+                const updatedFacility = req.body;
+
+                const result = await dataCollections.updateOne(
+                    {
+                        _id: new ObjectId(id),
+                    },
+                    {
+                        $set: updatedFacility,
+                    }
+                );
+
+                if (result.matchedCount === 0) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "Facility not found",
+                    });
+                }
+
+                res.status(200).json({
+                    success: true,
+                    message: "Facility updated successfully",
+                    data: result,
+                });
+
+            } catch (error) {
+                console.error("Update facility error:", error);
+
+                res.status(500).json({
+                    success: false,
+                    message: "Failed to update facility",
+                });
+            }
+        });
+        app.get("/myfacilities/:email", async (req, res) => {
+            try {
+                const { email } = req.params;
+
+                const result = await dataCollections
+                    .find({
+                        ownerEmail: email,
+                    })
+                    .toArray();
+
+                res.send(result);
+
+            } catch (error) {
+                console.error(error);
+
+                res.status(500).json({
+                    success: false,
+                    message: "Failed to get facilities",
+                });
+            }
+        });
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
