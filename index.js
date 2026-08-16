@@ -4,6 +4,7 @@ const express = require('express');
 const app = express()
 const port = process.env.PORT;
 const cors = require("cors");
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 app.use(cors());
 app.use(express.json());
 // app.use(express.json());
@@ -28,6 +29,32 @@ async function run() {
 
         const dataCollections = db.collection('sports');
         const bookingCollections = db.collection('bookings');
+        const verifyToken = async (req, res, next) => {
+            const JWKS = createRemoteJWKSet(
+                new URL('http://localhost:3000/api/auth/jwks')
+            )
+            const authHeader = req?.headers?.authorization
+            if (!authHeader) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
+            const token = authHeader.split(" ")[1];
+            if (!token) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
+            try {
+                const { payload } = await jwtVerify(token, JWKS)
+                console.log(payload);
+                next();
+
+            } catch (error) {
+                return res.status(403).json({ message: "forbidden" })
+            }
+            // console.log(token);
+            // console.log(authHeader);
+            // conso\.log()
+
+
+        }
         app.get('/sports', async (req, res) => {
             const cursor = dataCollections.find().limit(6);
             const result = await cursor.toArray();
@@ -77,7 +104,7 @@ async function run() {
                 });
             }
         });
-        app.get('/allsports/:id', async (req, res) => {
+        app.get('/allsports/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = {
                 _id: new ObjectId(id)
