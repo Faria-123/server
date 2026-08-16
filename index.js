@@ -60,16 +60,80 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         });
-        app.get('/allsports', async (req, res) => {
-            const cursor = dataCollections.find();
-            const result = await cursor.toArray();
-            res.send(result);
+        // app.get('/allsports', async (req, res) => {
+        //     const cursor = dataCollections.find();
+        //     const result = await cursor.toArray();
+        //     res.send(result);
+        // });
+        //here change
+        app.get("/allsports", async (req, res) => {
+            try {
+                const { search = "", sportType = "" } = req.query;
+
+                const query = {};
+
+                // Search
+                if (search.trim()) {
+                    query.facilityName = {
+                        $regex: search.trim(),
+                        $options: "i"
+                    };
+                }
+
+                // Filter
+                if (sportType) {
+                    const sportMap = {
+                        Badminton: ["Badminton Court"],
+
+                        Football: ["Football Turf"],
+
+                        Tennis: [
+                            "Tennis Court",
+                            "Tennis",
+                            "tennis"
+                        ],
+
+                        Swimming: [
+                            "Swimming Pool",
+                            "summing pool"
+                        ],
+
+                        Cricket: ["Cricket Ground"],
+
+                        Futsal: ["Futsal Court"],
+
+                        Basketball: ["Basketball Court"],
+
+                        Gym: ["Gym"]
+                    };
+
+                    const selectedTypes = sportMap[sportType];
+
+                    if (selectedTypes) {
+                        query.facilityType = {
+                            $in: selectedTypes
+                        };
+                    }
+                }
+
+                console.log("QUERY:", query);
+
+                const result = await dataCollections
+                    .find(query)
+                    .toArray();
+
+                res.status(200).send(result);
+
+            } catch (error) {
+                console.error("GET ALL SPORTS ERROR:", error);
+
+                res.status(500).send({
+                    message: "Failed to fetch facilities",
+                    error: error.message
+                });
+            }
         });
-        // app.post('/bookings', async (req, res) => {
-        //     const bookingData = req.body;
-        //     const result = await bookingCollections.insertOne(bookingData).toArray();
-        //     res.json(result);
-        // })
+
         app.post('/sports', async (req, res) => {
             const facilityData = req.body;
             const result = await dataCollections.insertOne(facilityData)
@@ -112,19 +176,19 @@ async function run() {
             const result = await dataCollections.findOne(query);
             res.send(result);
         });
-        app.get('/bookings/:userId', async (req, res) => {
+        app.get('/bookings/:userId', verifyToken, async (req, res) => {
             const { userId } = req.params;
             const result = await bookingCollections.find({ userId: userId }).toArray();
             res.send(result);
         });
-        app.delete("/bookings/:bookingId", async (req, res) => {
+        app.delete("/bookings/:bookingId", verifyToken, async (req, res) => {
             const { bookingId } = req.params;
             const result = await bookingCollections.deleteOne({ _id: new ObjectId(bookingId) });
             res.json(result);
         });
 
 
-        app.delete("/sports/:id", async (req, res) => {
+        app.delete("/sports/:id", verifyToken, async (req, res) => {
             try {
                 const { id } = req.params;
 
@@ -154,7 +218,7 @@ async function run() {
             }
         });
 
-        app.patch("/sports/:id", async (req, res) => {
+        app.patch("/sports/:id", verifyToken, async (req, res) => {
             try {
                 const { id } = req.params;
 
