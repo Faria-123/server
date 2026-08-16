@@ -31,7 +31,7 @@ async function run() {
         const bookingCollections = db.collection('bookings');
         const verifyToken = async (req, res, next) => {
             const JWKS = createRemoteJWKSet(
-                new URL('http://localhost:3000/api/auth/jwks')
+                new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
             )
             const authHeader = req?.headers?.authorization
             if (!authHeader) {
@@ -176,19 +176,19 @@ async function run() {
             const result = await dataCollections.findOne(query);
             res.send(result);
         });
-        app.get('/bookings/:userId', verifyToken, async (req, res) => {
+        app.get('/bookings/:userId', async (req, res) => {
             const { userId } = req.params;
             const result = await bookingCollections.find({ userId: userId }).toArray();
             res.send(result);
         });
-        app.delete("/bookings/:bookingId", verifyToken, async (req, res) => {
+        app.delete("/bookings/:bookingId", async (req, res) => {
             const { bookingId } = req.params;
             const result = await bookingCollections.deleteOne({ _id: new ObjectId(bookingId) });
             res.json(result);
         });
 
 
-        app.delete("/sports/:id", verifyToken, async (req, res) => {
+        app.delete("/sports/:id", async (req, res) => {
             try {
                 const { id } = req.params;
 
@@ -218,7 +218,7 @@ async function run() {
             }
         });
 
-        app.patch("/sports/:id", verifyToken, async (req, res) => {
+        app.patch("/sports/:id", async (req, res) => {
             try {
                 const { id } = req.params;
 
