@@ -176,7 +176,7 @@ async function run() {
             const result = await dataCollections.findOne(query);
             res.send(result);
         });
-        app.get('/bookings/:userId', async (req, res) => {
+        app.get('/bookings/:userId', verifyToken, async (req, res) => {
             const { userId } = req.params;
             const result = await bookingCollections.find({ userId: userId }).toArray();
             res.send(result);
@@ -188,7 +188,7 @@ async function run() {
         });
 
 
-        app.delete("/sports/:id", async (req, res) => {
+        app.delete("/sports/:id", verifyToken, async (req, res) => {
             try {
                 const { id } = req.params;
 
@@ -218,7 +218,7 @@ async function run() {
             }
         });
 
-        app.patch("/sports/:id", async (req, res) => {
+        app.patch("/sports/:id", verifyToken, async (req, res) => {
             try {
                 const { id } = req.params;
 
@@ -255,7 +255,7 @@ async function run() {
                 });
             }
         });
-        app.get("/myfacilities/:email", async (req, res) => {
+        app.get("/myfacilities/:email", verifyToken, async (req, res) => {
             try {
                 const { email } = req.params;
 
